@@ -1,14 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const format = require('quick-format-unescaped'); // same formater as the one is used in pino.js
+const format = require("quick-format-unescaped"); // same formater as the one is used in pino.js
 
-const DEFAULT_ENV_KEY = 'LOG_LEVEL';
+const DEFAULT_ENV_KEY = "LOG_LEVEL";
 
-const DEFAULT_LEVEL = 'info';
+const DEFAULT_LEVEL = "info";
 
-const silentLogFn = () => {};
+const silentLogFn = () => {
+};
 
 const yandexCloudLogFnBuilder = (
-  level: YandexCloudSimpleLogger.LogLevel,
+  level: YandexCloudSimpleLogger.LogLevel
 ): YandexCloudSimpleLogger.LogFn => {
   const LEVEL = level.toUpperCase();
 
@@ -17,7 +18,7 @@ const yandexCloudLogFnBuilder = (
     objOrMsg: string | unknown,
     ...args: unknown[]
   ) {
-    if (typeof objOrMsg === 'object') {
+    if (typeof objOrMsg === "object") {
       // TODO: Later add from pino
       // if (msg === null && n.length === 0) {
       //     formatParams = [null]
@@ -26,19 +27,19 @@ const yandexCloudLogFnBuilder = (
       //     formatParams = n
       // }
 
-      consoleOrMock[level === 'error' ? 'error' : 'log'](
+      consoleOrMock[level === "error" ? "error" : "log"](
         JSON.stringify({
           ...(objOrMsg instanceof Error ? { stack: objOrMsg.stack } : objOrMsg),
           level: LEVEL,
-          msg: format(args[0] ?? level, args.splice(1)),
-        }),
+          msg: format(args[0] ?? level, args.splice(1))
+        })
       );
     } else {
-      consoleOrMock[level === 'error' ? 'error' : 'log'](
+      consoleOrMock[level === "error" ? "error" : "log"](
         JSON.stringify({
           level: LEVEL,
-          msg: format(objOrMsg, args),
-        }),
+          msg: format(objOrMsg, args)
+        })
       );
     }
   };
@@ -77,14 +78,14 @@ export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
        * is used.  If a non-existing level value is specified, all levels are logged.
        */
       envKey?: string;
-    } = {},
+    } = {}
   ) {
     let {
       level,
       // eslint-disable-next-line prefer-const
       showTimestamp,
       // eslint-disable-next-line prefer-const
-      showLevel,
+      showLevel
     } = options;
 
     this.showTimestamp = showTimestamp ?? false;
@@ -97,12 +98,12 @@ export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
     level =
       envLevel !== undefined
         ? Object.entries(YandexCloudSimpleLogger.LogLevel).find(
-            (v) => v[0] === envLevel,
-          )?.[1]
+          (v) => v[0] === envLevel
+        )?.[1]
         : level ?? YandexCloudSimpleLogger.LogLevel[DEFAULT_LEVEL];
 
     for (const lvl of Object.values<YandexCloudSimpleLogger.LogLevel>(
-      YandexCloudSimpleLogger.LogLevel,
+      YandexCloudSimpleLogger.LogLevel
     )) {
       this[lvl] = yandexCloudLogFnBuilder(lvl);
       if (lvl === level) break;
@@ -131,11 +132,11 @@ export namespace YandexCloudSimpleLogger {
   }
 
   export enum LogLevel {
-    error = 'error',
-    warn = 'warn',
-    info = 'info',
-    debug = 'debug',
-    trace = 'trace',
+    error = "error",
+    warn = "warn",
+    info = "info",
+    debug = "debug",
+    trace = "trace",
   }
 }
 
