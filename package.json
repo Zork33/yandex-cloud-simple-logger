@@ -1,5 +1,5 @@
 {
-  "name": "YC Simple Logger",
+  "name": "yc-simple-logger",
   "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Alexey Zorkaltsev <azorkaltsev@yandex-team.ru>",
