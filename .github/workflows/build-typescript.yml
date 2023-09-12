@@ -13,8 +13,8 @@ jobs:
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: "#.*\\(next line will be removed by build-typescript GitHub action to be included in dist branch\\)\\n.*\\n"
-          replace: ""
-          regex: true
+          replace: "###"
+          regex: false
       - name: Build and push
         uses: alexthemaster/action-build-typescript@v1.3.1
         with:
