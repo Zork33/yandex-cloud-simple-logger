@@ -12,7 +12,7 @@ jobs:
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v3
         with:
-          find: "#.*\(next line will be removed by build-typescript GitHub action to be included in dist branch\)\n.*\n"
+          find: "#.*\\(next line will be removed by build-typescript GitHub action to be included in dist branch\\)\\n.*\\n"
           replace: ""
           regex: true
       - name: Build and push
