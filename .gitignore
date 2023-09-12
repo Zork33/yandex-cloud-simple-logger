@@ -1,6 +1,6 @@
 # node modules
 node_modules
-# build path
+# build path (next line will be removed by build-typescript GitHub action to be included in dist branch)
 # dist
 # environmental variables
 .env
