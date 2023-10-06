@@ -1,15 +1,14 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const format = require("quick-format-unescaped"); // same formater as the one is used in pino.js
+const format = require('quick-format-unescaped'); // same formater as the one is used in pino.js
 
-const DEFAULT_ENV_KEY = "LOG_LEVEL";
+const DEFAULT_ENV_KEY = 'LOG_LEVEL';
 
-const DEFAULT_LEVEL = "info";
+const DEFAULT_LEVEL = 'info';
 
-const silentLogFn = () => {
-};
+const silentLogFn = () => {};
 
 const yandexCloudLogFnBuilder = (
-  level: YandexCloudSimpleLogger.LogLevel
+  level: YandexCloudSimpleLogger.LogLevel,
 ): YandexCloudSimpleLogger.LogFn => {
   const LEVEL = level.toUpperCase();
 
@@ -18,7 +17,23 @@ const yandexCloudLogFnBuilder = (
     objOrMsg: string | unknown,
     ...args: unknown[]
   ) {
-    if (typeof objOrMsg === "object") {
+    const prefix: string[] = [];
+
+    // if (this.showTimestamp) {
+    //     prefix.push(new Date().toISOString());
+    // }
+    //
+    // if (this.showLevel) {
+    //     prefix.push(LEVEL);
+    // }
+
+    if (this.prefix) {
+      prefix.push(this.prefix);
+    }
+
+    const prefixStr = prefix.length === 0 ? '' : `[${prefix.join(' ')}] `;
+
+    if (typeof objOrMsg === 'object') {
       // TODO: Later add from pino
       // if (msg === null && n.length === 0) {
       //     formatParams = [null]
@@ -27,19 +42,38 @@ const yandexCloudLogFnBuilder = (
       //     formatParams = n
       // }
 
-      consoleOrMock[level === "error" ? "error" : "log"](
-        JSON.stringify({
-          ...(objOrMsg instanceof Error ? { stack: objOrMsg.stack } : objOrMsg),
-          level: LEVEL,
-          msg: format(args[0] ?? level, args.splice(1))
-        })
-      );
+      if (typeof args[0] === 'string') {
+        consoleOrMock.log(
+          JSON.stringify({
+            ...(objOrMsg instanceof Error
+              ? { stack: objOrMsg.stack }
+              : objOrMsg),
+            level: LEVEL,
+            msg: format(`${prefixStr}${args[0]}`, args.splice(1)),
+          }),
+        );
+      } else {
+        consoleOrMock.log(
+          JSON.stringify({
+            ...(objOrMsg instanceof Error
+              ? { stack: (objOrMsg as Error).stack }
+              : objOrMsg),
+            level: LEVEL,
+            msg: format(
+              `${prefixStr}%o`,
+              objOrMsg instanceof Error
+                ? (objOrMsg as Error).message
+                : objOrMsg,
+            ),
+          }),
+        );
+      }
     } else {
-      consoleOrMock[level === "error" ? "error" : "log"](
+      consoleOrMock.log(
         JSON.stringify({
           level: LEVEL,
-          msg: format(objOrMsg, args)
-        })
+          msg: format(`${prefixStr}${objOrMsg}`, args),
+        }),
       );
     }
   };
@@ -49,14 +83,18 @@ const yandexCloudLogFnBuilder = (
  * The simplest logger class, with a minimal set of logging methods and the most simple output to the Yandex Cloud logger.
  */
 export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
+  fatal: YandexCloudSimpleLogger.LogFn = silentLogFn;
   error: YandexCloudSimpleLogger.LogFn = silentLogFn;
   warn: YandexCloudSimpleLogger.LogFn = silentLogFn;
   info: YandexCloudSimpleLogger.LogFn = silentLogFn;
   debug: YandexCloudSimpleLogger.LogFn = silentLogFn;
   trace: YandexCloudSimpleLogger.LogFn = silentLogFn;
 
+  readonly prefix?: string;
+
   showTimestamp: boolean;
   showLevel: boolean;
+  private readonly: any;
 
   constructor(
     options: {
@@ -64,6 +102,10 @@ export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
        * Level down to which to log messages. Default is *info*.
        */
       level?: YandexCloudSimpleLogger.LogLevel;
+      /**
+       * Prefix that gets added to a message, default undefined
+       */
+      prefix?: string;
       /**
        * Whether to add the date and time to the message. Default is false.
        */
@@ -78,16 +120,19 @@ export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
        * is used.  If a non-existing level value is specified, all levels are logged.
        */
       envKey?: string;
-    } = {}
+    } = {},
   ) {
     let {
       level,
       // eslint-disable-next-line prefer-const
+      prefix,
+      // eslint-disable-next-line prefer-const
       showTimestamp,
       // eslint-disable-next-line prefer-const
-      showLevel
+      showLevel,
     } = options;
 
+    if (prefix) this.prefix = prefix;
     this.showTimestamp = showTimestamp ?? false;
     this.showLevel = showLevel ?? false;
 
@@ -98,12 +143,12 @@ export class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
     level =
       envLevel !== undefined
         ? Object.entries(YandexCloudSimpleLogger.LogLevel).find(
-          (v) => v[0] === envLevel
-        )?.[1]
+            (v) => v[0] === envLevel,
+          )?.[1]
         : level ?? YandexCloudSimpleLogger.LogLevel[DEFAULT_LEVEL];
 
     for (const lvl of Object.values<YandexCloudSimpleLogger.LogLevel>(
-      YandexCloudSimpleLogger.LogLevel
+      YandexCloudSimpleLogger.LogLevel,
     )) {
       this[lvl] = yandexCloudLogFnBuilder(lvl);
       if (lvl === level) break;
@@ -124,6 +169,7 @@ export namespace YandexCloudSimpleLogger {
    * Therefore, *fatal* and *trace* methods are omitted.
    */
   export interface Logger {
+    fatal: LogFn;
     error: LogFn;
     warn: LogFn;
     info: LogFn;
@@ -132,11 +178,11 @@ export namespace YandexCloudSimpleLogger {
   }
 
   export enum LogLevel {
-    error = "error",
-    warn = "warn",
-    info = "info",
-    debug = "debug",
-    trace = "trace",
+    error = 'error',
+    warn = 'warn',
+    info = 'info',
+    debug = 'debug',
+    trace = 'trace',
   }
 }
 
