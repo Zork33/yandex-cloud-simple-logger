@@ -2,18 +2,25 @@
  * The simplest logger class, with a minimal set of logging methods and the most simple output to the Yandex Cloud logger.
  */
 export declare class YandexCloudSimpleLogger implements YandexCloudSimpleLogger.Logger {
+    fatal: YandexCloudSimpleLogger.LogFn;
     error: YandexCloudSimpleLogger.LogFn;
     warn: YandexCloudSimpleLogger.LogFn;
     info: YandexCloudSimpleLogger.LogFn;
     debug: YandexCloudSimpleLogger.LogFn;
     trace: YandexCloudSimpleLogger.LogFn;
+    readonly prefix?: string;
     showTimestamp: boolean;
     showLevel: boolean;
+    private readonly;
     constructor(options?: {
         /**
          * Level down to which to log messages. Default is *info*.
          */
         level?: YandexCloudSimpleLogger.LogLevel;
+        /**
+         * Prefix that gets added to a message, default undefined
+         */
+        prefix?: string;
         /**
          * Whether to add the date and time to the message. Default is false.
          */
@@ -40,6 +47,7 @@ export declare namespace YandexCloudSimpleLogger {
      * Therefore, *fatal* and *trace* methods are omitted.
      */
     interface Logger {
+        fatal: LogFn;
         error: LogFn;
         warn: LogFn;
         info: LogFn;
